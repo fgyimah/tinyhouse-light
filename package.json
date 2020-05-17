@@ -1,0 +1,13 @@
+{
+  "name": "tinyhouse-v1-server",
+  "version": "0.1.0",
+  "dependencies": {
+    "express": "^4.17.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4"
+  },
+  "scripts": {
+    "start": "nodemon src/"
+  }
+}
