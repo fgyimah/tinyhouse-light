@@ -48,12 +48,15 @@ const seed = async () => {
       },
     ];
 
+    //clear database
+    await db.listings.deleteMany({});
+
     for (const listing of listings) {
-      await db.listings.deleteMany({});
       await db.listings.insertOne(listing);
     }
 
     console.log('[seed]: success');
+    process.exit(0);
   } catch {
     throw new Error('Unable to seed database');
   }
