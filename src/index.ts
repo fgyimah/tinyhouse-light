@@ -1,7 +1,21 @@
-import express from 'express';
-const app = express();
-const port = 9000;
+import express, { Application } from 'express';
+import { ApolloServer } from 'apollo-server-express';
 
-app.get('/', (req, res) => res.send('Hello World!'));
+import { typeDefs, resolvers } from './graphql';
+import { connectDatabase } from './database';
 
-app.listen(port, () => console.log(`[app]: http://localhost:${port}`));
+const mount = async (app: Application) => {
+  const db = await connectDatabase();
+  //create a base apollo server
+  const server = new ApolloServer({
+    typeDefs,
+    resolvers,
+    context: () => ({ db }),
+  });
+  server.applyMiddleware({ app, path: '/api' });
+
+  const port = 9000;
+  app.listen(port, () => console.log(`[app]: http://localhost:${port}`));
+};
+
+mount(express());
