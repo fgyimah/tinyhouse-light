@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 import express, { Application } from 'express';
 import { ApolloServer } from 'apollo-server-express';
 
@@ -14,7 +16,7 @@ const mount = async (app: Application) => {
   });
   server.applyMiddleware({ app, path: '/api' });
 
-  const port = 9000;
+  const port = process.env.PORT;
   app.listen(port, () => console.log(`[app]: http://localhost:${port}`));
 };
 

@@ -1,8 +1,9 @@
 import { MongoClient } from 'mongodb';
+import { Database } from '../lib/types';
 
-const url = 'mongodb://localhost:27017';
+const url = process.env.DB_URI || 'mongodb://localhost:27017';
 
-export const connectDatabase = async () => {
+export const connectDatabase = async (): Promise<Database> => {
   const client = await MongoClient.connect(url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
