@@ -1,17 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { server } from '../../lib/api';
+import React from 'react';
+import { gql } from 'apollo-boost';
+import { useQuery, useMutation } from 'react-apollo';
+import { List, Avatar, Button, Spin } from 'antd';
+import { Listings as ListingData } from './__generated__/Listings';
 import {
-  Listing,
-  ListingData,
-  DeleteListingData,
+  DeleteListing as DeleteListingData,
   DeleteListingVariables,
-} from './types';
+} from './__generated__/DeleteListing';
+import { ListingsSkeleton } from './components';
+import './styles/Listings.css';
 
 interface Props {
   title: string;
 }
 
-const LISTINGS_QUERY = `
+const LISTINGS_QUERY = gql`
   query Listings {
     listings {
       id
@@ -27,7 +30,7 @@ const LISTINGS_QUERY = `
   }
 `;
 
-const DELETE_LISTING_MUTATION = `
+const DELETE_LISTING_MUTATION = gql`
   mutation DeleteListing($id: ID!) {
     deleteListing(id: $id) {
       id
@@ -37,41 +40,66 @@ const DELETE_LISTING_MUTATION = `
 `;
 
 export const Listings = ({ title }: Props) => {
-  const [listings, setListings] = useState<Listing[] | null>(null);
+  const { data, loading, error, refetch } = useQuery<ListingData>(
+    LISTINGS_QUERY
+  );
 
-  useEffect(() => {
-    queryListings();
-  }, []);
+  const [
+    deleteListing,
+    { error: deletionError, loading: deletionLoading },
+  ] = useMutation<DeleteListingData, DeleteListingVariables>(
+    DELETE_LISTING_MUTATION
+  );
 
-  const queryListings = async () => {
-    const { data } = await server.fetch<ListingData>({
-      query: LISTINGS_QUERY,
-    });
-    setListings(data.listings);
+  const deleteListingRequest = async (id: string) => {
+    await deleteListing({ variables: { id } });
+    refetch();
   };
 
-  const deleteListing = async (id: string) => {
-    await server.fetch<DeleteListingData, DeleteListingVariables>({
-      query: DELETE_LISTING_MUTATION,
-      variables: {
-        id,
-      },
-    });
-    queryListings();
-  };
+  const listings = data?.listings;
 
-  const listingsList = listings?.map((listing) => {
-    return (
-      <li key={listing.id}>
-        {listing.title}{' '}
-        <button onClick={() => deleteListing(listing.id)}>Delete</button>
-      </li>
-    );
-  });
+  if (loading) {
+    return <ListingsSkeleton title="TinyHouse Listings" />;
+  }
+
+  if (error) {
+    return <h1>Something went wrong...please try again later!</h1>;
+  }
+  const deletionErrorMessage = deletionError ? (
+    <h1>Failed to delete...</h1>
+  ) : null;
+
+  const listingsList = listings ? (
+    <List
+      itemLayout="horizontal"
+      dataSource={listings}
+      renderItem={(listing) => (
+        <List.Item
+          actions={[
+            <Button
+              type="primary"
+              onClick={() => deleteListingRequest(listing.id)}
+            >
+              Delete
+            </Button>,
+          ]}
+        >
+          <List.Item.Meta
+            title={listing.title}
+            description={listing.address}
+            avatar={<Avatar src={listing.image} size={48} shape="square" />}
+          />
+        </List.Item>
+      )}
+    ></List>
+  ) : null;
   return (
-    <div>
-      <h2>{title}</h2>
-      <ul>{listingsList}</ul>
+    <div className="listings">
+      <Spin spinning={deletionLoading}>
+        <h2>{title}</h2>
+        <ul>{listingsList}</ul>
+        {deletionErrorMessage}
+      </Spin>
     </div>
   );
 };

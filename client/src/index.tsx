@@ -1,12 +1,20 @@
 import React from 'react';
 import { render } from 'react-dom';
+import ApolloClient from 'apollo-boost';
+import { ApolloProvider } from 'react-apollo';
 import { Listings } from './sections';
 import * as serviceWorker from './serviceWorker';
 
+import './styles/index.css';
+
+const client = new ApolloClient({
+  uri: 'http://localhost:7700/api',
+});
+
 render(
-  <React.StrictMode>
+  <ApolloProvider client={client}>
     <Listings title="TinyHouse Listings" />
-  </React.StrictMode>,
+  </ApolloProvider>,
   document.getElementById('root')
 );
 
